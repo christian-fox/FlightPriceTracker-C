@@ -60,6 +60,9 @@ namespace RyanairFlightTrackBot
                 FileHandler fileHandler = new FileHandler(flight);
                 DatabaseHandler databaseHandler = new DatabaseHandler(flight);
 
+                // Check if flight table exists in Database, if not create it 
+                databaseHandler.CreateFlightTable();
+
                 // Get previous (yesterday's) price, date, and time
                 //////////// BOTH CLASSES ARE SETTING flight.previousPrice ////////////
                 fileHandler.GetPreviousPrice();
@@ -67,7 +70,6 @@ namespace RyanairFlightTrackBot
 
                 // Write flight price to file
                 fileHandler.StoreFlightDetails(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.ff"));
-                databaseHandler.CreateFlightTable();
                 databaseHandler.AppendRecord();
 
                 // Continue to the next iteration of the loop if previous data is not obtained

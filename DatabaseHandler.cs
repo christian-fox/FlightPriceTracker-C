@@ -45,7 +45,7 @@ namespace RyanairFlightTrackBot
                         _tableCreated = true;
 
                         // Insert data into the newly created table
-                        command.CommandText = $"INSERT INTO {tableName} (Currency, FlightPrice, CurrentDateTime, SeatAvailability, FlightID, OriginAirport, DestinationAirport, FlightDate, FlightTime) " +
+                        command.CommandText = $"INSERT INTO [{tableName}] (Currency, FlightPrice, CurrentDateTime, SeatAvailability, FlightID, OriginAirport, DestinationAirport, FlightDate, FlightTime) " +
                                               $"VALUES (@Currency, @FlightPrice, @CurrentDateTime, @SeatAvailability, @FlightID, @OriginAirport, @DestinationAirport, @FlightDate, @FlightTime)";
 
                         command.Parameters.AddWithValue("@Currency", flight.currency);
@@ -58,7 +58,16 @@ namespace RyanairFlightTrackBot
                         command.Parameters.AddWithValue("@FlightDate", flight.flightDate);
                         command.Parameters.AddWithValue("@FlightTime", flight.sFlightTime);
 
-                        command.ExecuteNonQuery();
+                        try
+                        {
+                            command.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Handle the exception (e.g., log it, throw a custom exception, etc.)
+                            logger.Warning($"Failed to append Database record for flight {flight.flightNumber} (in CreateFlightTable()). EXCEPTION: {ex}");
+                            Console.WriteLine($"Exception: {ex}");
+                        }
                     }
                 }
             }
@@ -86,7 +95,7 @@ namespace RyanairFlightTrackBot
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
                         command.CommandText = command.CommandText =
-                            $"SELECT FlightPrice, CurrentDateTime FROM TableName ORDER BY CurrentDateTime DESC LIMIT 1";
+                            $"SELECT FlightPrice, CurrentDateTime FROM [{tableName}] ORDER BY CurrentDateTime DESC LIMIT 1";
 
                         using (SQLiteDataReader reader = command.ExecuteReader())
                         {
@@ -118,14 +127,13 @@ namespace RyanairFlightTrackBot
 
                 using (SQLiteCommand command = new SQLiteCommand(connection))
                 {
-                    command.CommandText = $"INSERT INTO {tableName} (Currency, FlightPrice, CurrentDateTime, SeatAvailability) " +
+                    command.CommandText = $"INSERT INTO [{tableName}] (Currency, FlightPrice, CurrentDateTime, SeatAvailability) " +
                         $"VALUES (@Currency, @FlightPrice, @CurrentDateTime, @SeatAvailability)";
 
                     command.Parameters.AddWithValue("@Currency", flight.currency);
                     command.Parameters.AddWithValue("@FlightPrice", flight.flightPrice);
                     command.Parameters.AddWithValue("@CurrentDateTime", DateTime.Now);
                     command.Parameters.AddWithValue("@SeatAvailability", flight.seatAvailability);
-                    Console.WriteLine(command.Parameters.ToString());
 
                     try
                     {
