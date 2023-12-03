@@ -53,7 +53,7 @@ namespace RyanairFlightTrackBot
             // ...
 
             // For now, let's display a message box with the flight details
-            MessageBox.Show($"New Flight Created:\n{newFlight.ToString()}", "Flight Tracking");
+            MessageBox.Show($"New Flight Created:\n{newFlight}", "Flight Tracking");
         }
 
 
@@ -62,11 +62,13 @@ namespace RyanairFlightTrackBot
             InitializeComponent();
 
             // Set up logger
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //    .WriteTo.Console()
+            //    .CreateLogger();
+            // Using logger class now
+            //LoggerManager.InitialiseLogger();
 
-            RunFlightChecks();
+            //RunFlightChecks();
         }
     }
 }

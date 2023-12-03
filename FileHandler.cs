@@ -1,4 +1,4 @@
-﻿using Serilog;
+﻿//using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,15 +9,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CsvHelper;
+using NLog;
 
 namespace RyanairFlightTrackBot
 {
     internal class FileHandler
     {
-        private ILogger logger = Log.ForContext<Flight>();
+        //private ILogger logger = Log.ForContext<Flight>();
+        private static readonly Logger logger = LoggerManager.GetLogger();
 
-
-        private Flight flight;
+        private readonly Flight flight;
 
         internal FileHandler(Flight flight)
         {
@@ -40,7 +41,7 @@ namespace RyanairFlightTrackBot
             }
 
             // Logging or additional actions if needed
-            logger.Information($"Flight_Price = {flight.flightPrice}");
+            logger.Info($"Flight_Price = {flight.flightPrice}");
         }
 
 
@@ -119,13 +120,13 @@ namespace RyanairFlightTrackBot
                     {
                         flight.sPrevDateAndTime = lastRowColumns[2];
                         flight.previousPrice = Math.Round(float.Parse(lastRowColumns[1]), 2);
-                        this.logger.Information($"Previous_Price = {flight.previousPrice}");
+                        logger.Info($"Previous_Price = {flight.previousPrice}");
                     }
                 }
             }
             catch (Exception e)
             {
-                this.logger.Error($"Error reading from file: {e.Message}");
+                logger.Error($"Error reading from file: {e.Message}");
             }
         }
     }

@@ -1,17 +1,18 @@
 ﻿using CsvHelper.Configuration.Attributes;
-using Serilog;
+//using Serilog;
 using System;
 using System.Data;
 using System.Data.SQLite;
+using NLog;
 
 namespace RyanairFlightTrackBot
 {
     internal class DatabaseHandler
     {
-        private ILogger logger = Log.ForContext<Flight>();
+        //private ILogger logger = Log.ForContext<Flight>();
+        private static readonly Logger logger = LoggerManager.GetLogger();
 
-
-        private Flight flight;
+        private readonly Flight flight;
         private readonly string tableName;
         private bool _tableCreated = false; // note the _ prefix indicates a class-level field/attrib. This is GOOD PRACTICE!
 
@@ -23,7 +24,7 @@ namespace RyanairFlightTrackBot
         }
 
 
-        private string _connectionString = @"Data Source=C:/Users/chris/source/repos/RyanairFlightTrackBot/FlightBotDataBase.db;";
+        private readonly string _connectionString = @"Data Source=C:/Users/chris/source/repos/RyanairFlightTrackBot/FlightBotDataBase.db;";
         public void CreateFlightTable()
         {
             using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
@@ -65,7 +66,7 @@ namespace RyanairFlightTrackBot
                         catch (Exception ex)
                         {
                             // Handle the exception (e.g., log it, throw a custom exception, etc.)
-                            logger.Warning($"Failed to append Database record for flight {flight.flightNumber} (in CreateFlightTable()). EXCEPTION: {ex}");
+                            logger.Warn( $"Failed to append Database record for flight {flight.flightNumber} (in CreateFlightTable()). EXCEPTION: {ex}");
                             Console.WriteLine($"Exception: {ex}");
                         }
                     }
@@ -82,7 +83,7 @@ namespace RyanairFlightTrackBot
             // Handle exception where table was created just now, CreateFlightTable() will add the initial values from today
             if (_tableCreated)
             {
-                logger.Information($"Flight {tableName} has just been created today, therefore not data for yesterdays/previous price.");
+                logger.Info($"Flight {tableName} has just been created today, therefore not data for yesterdays/previous price.");
                 return;
             }
             try
@@ -110,7 +111,7 @@ namespace RyanairFlightTrackBot
             }
             catch (Exception ex)
             {
-                logger.Warning($"Flight {flight.flightNumber}, Exception: {ex}.\n " +
+                logger.Warn($"Flight {flight.flightNumber}, Exception: {ex}.\n " +
                     $"Could not access SQL Database to obtain prevoiusPrice");
             }
 
@@ -142,7 +143,7 @@ namespace RyanairFlightTrackBot
                     catch (Exception ex)
                     {
                         // Handle the exception (e.g., log it, throw a custom exception, etc.)
-                        logger.Warning($"Failed to append Database record for flight {flight.flightNumber}. EXCEPTION: {ex}");
+                        logger.Warn($"Failed to append Database record for flight {flight.flightNumber}. EXCEPTION: {ex}");
                         Console.WriteLine($"Exception: {ex}");
                     }
                 }

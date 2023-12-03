@@ -8,14 +8,15 @@ namespace RyanairFlightTrackBot
 {
     internal static class FlightTrackerApp
     {
-        // Set current working directory
-        static readonly string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
         static readonly string operatingSystem = "Windows"; // Use "MAC" for Mac
 
 
         public static void RunFlightChecks()
         {
+            // Initialise the logger on each entry of the background checks -- need to initialise a logger when adding a new flight too!
+             LoggerManager.InitialiseLogger();
+
             // Create list of flight objects
             Flight.flightList = new List<Flight>
             {
@@ -75,7 +76,8 @@ namespace RyanairFlightTrackBot
         internal static void Main()
         {
             // Call my GUI
-            //MainWindow.Run(new MainWindow());
+            App app = new App();
+            app.Run(new MainWindow());
 
             // Call background service
             RunFlightChecks();

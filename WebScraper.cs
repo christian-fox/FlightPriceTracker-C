@@ -10,17 +10,19 @@ using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium;
 using SeleniumExtras.WaitHelpers;
-using Serilog;
+//using Serilog;
 using System.Linq.Expressions;
+using System.Collections.ObjectModel;
+using NLog;
 
 namespace RyanairFlightTrackBot
 {
     internal class WebScraper
     {
-        private ILogger logger = Log.ForContext<Flight>();
+        //private ILogger logger = Log.ForContext<Flight>();
+        private static readonly Logger logger = LoggerManager.GetLogger();
 
-
-        private Flight flight;
+        private readonly Flight flight;
 
         internal WebScraper(Flight flight)
         {
@@ -47,11 +49,33 @@ namespace RyanairFlightTrackBot
                         // Navigate to the search page
                         driver.Navigate().GoToUrl("https://www.ryanair.com/gb/en");
 
-                        // Click 'Agree' on Cookie Window
+                        // Click 'Agree' on Cookie Window - Legacy className="cookie-popup-with-overlay__button" - changed to find by data-ref
                         IWebElement cookieWindow = new WebDriverWait(driver, TimeSpan.FromSeconds(10))
                             .Until(ExpectedConditions.ElementExists(By.ClassName("cookie-popup-with-overlay__box")));
-                        IWebElement agreeButton = cookieWindow.FindElement(By.ClassName("cookie-popup-with-overlay__button"));
-                        agreeButton.Click();
+                        
+                        IReadOnlyCollection<IWebElement> cookieOptions = cookieWindow.FindElements(By.TagName("button"));
+                        IWebElement agreeButton = null;
+                        foreach (IWebElement cookieOption in cookieOptions)
+                        {
+                            if (cookieOption.Text.ToLower().Contains("agree"))
+                            {
+                                // Assuming only one of the several buttons has the substring "agree" in its name - handle exception?
+                                agreeButton = cookieOption;
+                                break;
+                            }
+                        }
+                        if (agreeButton != null)
+                        {
+                            agreeButton.Click();
+                        }
+                        else
+                        {
+                            logger.Error("Cookie window agree button not found. None of the buttons contain the sub-string 'agree'.");
+                            ///////////////////////////////////////////////////////////////////////
+                            // Actually breaking out of the 'try 10 times' loop here. ////////////
+                            break; // This avoids a log msg relating to the one-way check-box. //                                                   //
+                            ////////////////////////////////////////////////////////////////////
+                        }
 
                         // Check 'One Way' Checkbox
                         IReadOnlyCollection<IWebElement> checkBoxes = new WebDriverWait(driver, TimeSpan.FromSeconds(10))

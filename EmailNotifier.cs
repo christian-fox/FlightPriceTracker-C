@@ -5,13 +5,15 @@ using System.Net.Mail;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Serilog;
+//using Serilog;
+using NLog;
 
 namespace RyanairFlightTrackBot
 {
     internal class EmailNotifier
     {
-        private ILogger logger = Log.ForContext<Flight>();
+        //private ILogger logger = Log.ForContext<Flight>();
+        private static readonly Logger logger = LoggerManager.GetLogger();
 
         // To increase security, could use a (xml) config file to set environment variables for email credentials and get the OS (cmd prompt) to read them in.
         private static readonly string adminEmail = "christianleonardfox@gmail.com";
@@ -21,7 +23,7 @@ namespace RyanairFlightTrackBot
 
 
 
-        private Flight flight;
+        private readonly Flight flight;
 
         internal EmailNotifier(Flight flight)
         {
@@ -37,30 +39,36 @@ namespace RyanairFlightTrackBot
             // If any flight price is null, send an email
             if (bNullPrices)
             {
+                bool emailSent = false;
                 int emailAttempts = 0;
-                SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
-                smtpClient.UseDefaultCredentials = false;
-                smtpClient.Credentials = new NetworkCredential(adminEmail, adminPassword);
-                smtpClient.EnableSsl = true;
+                SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587)
+                {
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(adminEmail, adminPassword),
+                    EnableSsl = true
+                };
 
                 while (emailAttempts < 10)
                 {
                     // Set up email content
-                    MailMessage mailMessage = new MailMessage(adminEmail, recipient);
-                    mailMessage.Subject = "BUG: Ryanair Flight Bot failed to obtain price";
-                    mailMessage.Body = $@"<html>
+                    MailMessage mailMessage = new MailMessage(adminEmail, recipient)
+                    {
+                        Subject = "BUG: Ryanair Flight Bot failed to obtain price",
+                        Body = $@"<html>
                                        <body>
                                            <p>Dear <span style=""color:darkblue"">{recipient}</span>,</p>
                                            <p>Issue getting flight prices!</p>
                                        </body>
-                                   </html>";
-                    mailMessage.IsBodyHtml = true;
+                                   </html>",
+                        IsBodyHtml = true
+                    };
 
                     try
                     {
                         // Send email
                         smtpClient.Send(mailMessage);
                         Console.WriteLine($"Email sent successfully to {recipient}");
+                        emailSent = true;
                         break;
                     }
                     catch (Exception ex)
@@ -69,6 +77,7 @@ namespace RyanairFlightTrackBot
                         emailAttempts++;
                     }
                 }
+                if (!emailSent) logger.Error("Bug-email failed to send after 10 tries.");
             }
         }
 
@@ -83,6 +92,7 @@ namespace RyanairFlightTrackBot
             {
                 int emailAttempts = 0;
                 object sendResult = recipient;
+                bool emailSent = false;
 
                 while (sendResult != null)
                 {
@@ -140,9 +150,9 @@ namespace RyanairFlightTrackBot
                             sendResult = ex.Message;
                         }
                     }
-
                     emailAttempts++;
                 }
+                if (!emailSent) logger.Error("Bug-email failed to send after 10 tries.");
             }
         }
 

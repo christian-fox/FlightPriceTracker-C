@@ -8,7 +8,8 @@ using System.Windows.Media.Media3D;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Support.UI;
-using Serilog;
+//using Serilog;
+using NLog;
 
 namespace RyanairFlightTrackBot
 {
@@ -17,7 +18,8 @@ namespace RyanairFlightTrackBot
     /// </summary>
     internal class Flight
     {
-        private ILogger logger = Log.ForContext<Flight>();
+        //private ILogger logger = Log.ForContext<Flight>();
+        private static readonly Logger logger = LoggerManager.GetLogger();
 
         public static int NoOfObjects { get; private set; } = 0;
         public static int NoOfObjectCreationAttempts { get; private set; } = 0;
@@ -179,7 +181,7 @@ namespace RyanairFlightTrackBot
             {
                 // Handle the case when the regex doesn't match
                 Console.WriteLine("Price format not recognized");
-                logger.Warning($"Flight {flightNumber} flightPriceStr not in correct format.");
+                logger.Warn($"Flight {flightNumber} flightPriceStr not in correct format.");
             }
         }
 
