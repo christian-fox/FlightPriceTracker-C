@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,12 +10,47 @@ namespace RyanairFlightTrackBot
     {
 
         static readonly string operatingSystem = "Windows"; // Use "MAC" for Mac
+        private Timer dailyTimer;
+        //private DateTime nextScheduledTime;
 
+        //static FlightTrackerApp()
+        //{
+        //    // Retrieve the last scheduled time from persistent storage
+        //    // For simplicity, let's assume it's stored in a configuration file or a database
+        //    nextScheduledTime = UpdateScheduledTime();
 
-        public static void RunFlightChecks()
+        //    // Calculate the time until the next daily task
+        //    TimeSpan timeUntilDailyTask = nextScheduledTime - DateTime.Now;
+
+        //    // Set up the timer to call YourBackgroundServiceMethod once a day
+        //    dailyTimer = new Timer(RunFlightChecks, null, timeUntilDailyTask, TimeSpan.FromDays(1));
+        //}
+
+        //private DateTime UpdateScheduledTime()
+        //{
+        //    // Retrieve the next scheduled time from persistent storage
+        //    // For simplicity, let's assume it's stored in a configuration file or a database
+        //    // Replace this with your actual retrieval logic
+        //    return DateTime.Today.AddDays(1).AddHours(8);
+        //}
+        //}
+
+        private void DailyTimer(AppConfig config)
+        {
+            // Once flight checks have finished, update SCHEDULED_TIME environment variable to tomorrow
+            ConfigReader.UpdateNextScheduledTime(config);
+
+            // Set up the timer to call RunFlightChecks once a day
+            dailyTimer = new Timer(RunFlightChecks, null, config.NextScheduledTime - DateTime.Now);
+
+        }
+
+        private static void RunFlightChecks()
         {
             // Initialise the logger on each entry of the background checks -- need to initialise a logger when adding a new flight too!
-             LoggerManager.InitialiseLogger();
+            LoggerManager.InitialiseLogger();
+
+            
 
             // Create list of flight objects
             Flight.flightList = new List<Flight>
@@ -70,18 +105,33 @@ namespace RyanairFlightTrackBot
 
             // Ensure flight price is obtained for each flight
             EmailNotifier.NotifyMissingPriceBug();
+
+
+            // Initiate infinite loop between DailyTimer() & RunFlightChecks()
+            DailyTimer(config);
         }
 
         [STAThread]
-        internal static void Main()
+        internal static async Task Main()
         {
+            // Read Batch file
+            AppConfig config = ConfigReader.ReadConfig();
+
+            // Call RunFlightChecks immediately upon application start
+            await RunFlightChecksAsync(config);
+
+            // Set up the timer to call RunFlightChecks once a day
+            DailyTimer(config);
+
             // Call my GUI
             App app = new App();
-            app.Run(new MainWindow());
+            MainWindow mainWindow = new MainWindow();
+            app.Run(mainWindow);
+        }
 
-            // Call background service
-            RunFlightChecks();
-
+        private static async Task RunFlightChecksAsync(AppConfig config)
+        {
+            await Task.Run(() => RunFlightChecks(config));
         }
 
 
