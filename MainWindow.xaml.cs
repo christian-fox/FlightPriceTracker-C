@@ -1,4 +1,4 @@
-﻿using RyanairFlightTrackBot;
+using RyanairFlightTrackBot;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -27,12 +27,49 @@ namespace RyanairFlightTrackBot
     public partial class MainWindow : Window
     {
 
-        private void OnTextBoxClicked(object sender, MouseButtonEventArgs e)
+        private void OnTextBoxClicked(object sender, MouseButtonEventArgs e) 
         {
             if (sender is TextBox textBox)
             {
                 textBox.Text = string.Empty;
-                textBox.PreviewMouseLeftButtonDown -= OnTextBoxClicked; // Remove the event handler after the first click
+                //textBox.PreviewMouseLeftButtonDown -= OnTextBoxClicked; // Remove the event handler after the first click    ////////////// do i want to do this anymore???
+
+                // Subscribe to LostFocus event
+                textBox.LostFocus += TextBoxLostFocusHandler;
+            }
+        }
+
+        private void TextBoxLostFocusHandler(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                // Check if the text box is empty
+                if (string.IsNullOrWhiteSpace(textBox.Text))
+                {
+                    // Repopulate the original text
+                    if (textBox == DepartureAirportTextBox)
+                    {
+                        textBox.Text = "Blackpool";
+                    }
+                    else if (textBox == DestinationAirportTextBox)
+                    {
+                        textBox.Text = "Alicante";
+                    }
+                    else if (textBox == DateTextBox)
+                    {
+                        textBox.Text = "YYYY-MM-DD";
+                    }
+                    else if (textBox == FlightNumberTextBox)
+                    {
+                        textBox.Text = "FR 1234";
+                    }
+                    else if (textBox == NotifyEmailsTextBox)
+                    {
+                        textBox.Text = "name1@domain.com, ...";
+                    }
+                }
+                // Unsubscribe from LostFocus event
+                textBox.LostFocus -= TextBoxLostFocusHandler;
             }
         }
 
@@ -55,7 +92,6 @@ namespace RyanairFlightTrackBot
             // For now, let's display a message box with the flight details
             MessageBox.Show($"New Flight Created:\n{newFlight}", "Flight Tracking");
         }
-
 
         public MainWindow()
         {
