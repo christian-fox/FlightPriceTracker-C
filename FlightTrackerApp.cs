@@ -26,7 +26,11 @@ namespace RyanairFlightTrackBot
         static void Main(string[] args)
         {
             using IHost host = CreateHostBuilder(args).Build();
-            host.Run();
+            // Start the host and background service on a separate thread
+            Task.Run(() => host.Run());
+            // Call my GUI
+            App app = new App();
+            app.Run(new MainWindow());
         }
 
         static IHostBuilder CreateHostBuilder(string[] args) =>
