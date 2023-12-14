@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
+
 namespace RyanairFlightTrackBot
 {
     internal class BackgroundService : Microsoft.Extensions.Hosting.BackgroundService
@@ -12,12 +13,12 @@ namespace RyanairFlightTrackBot
             // Initialise the logger on each entry of the background checks -- need to initialise a logger when adding a new flight too!
             LoggerManager.InitialiseLogger();
 
-            // Create list of flight objects
-            Flight.flightList = new List<Flight>
-                {
-                    new Flight("Liverpool", "Lanzarote", "2024-03-14", "FR 6574", new List<string> { "christianlfox@aol.com", "FoxsFlightForecast@europe.com" })
-                    // Add other flight objects here
-                };
+            //// Create list of flight objects. Get from Database. Take this out of RunFlightChecks() and move to an initialisation method. !!!!!!----------------------------------!!!!!!
+            //Flight.flightList = new List<Flight>
+            //    {
+            //        new Flight("Liverpool", "Lanzarote", "2024-03-14", "FR 6574", new List<string> { "christianlfox@aol.com", "FoxsFlightForecast@europe.com" })
+            //        // Add other flight objects here
+            //    };
 
             foreach (Flight flight in Flight.flightList)
             {
@@ -37,7 +38,7 @@ namespace RyanairFlightTrackBot
                 DatabaseHandler databaseHandler = new DatabaseHandler(flight);
 
                 // Check if flight table exists in Database, if not create it 
-                databaseHandler.CreateFlightTable();
+                //databaseHandler.CreateFlightTable();      --- do not need to call now as i all flight objects have been created via the tables in the database. Any new flights will have a table created there and then.
 
                 // Get previous (yesterday's) price, date, and time
                 //////////// BOTH CLASSES ARE SETTING flight.previousPrice ////////////
@@ -59,15 +60,10 @@ namespace RyanairFlightTrackBot
                     EmailNotifier emailNotifier = new EmailNotifier(flight);
                     emailNotifier.NotifyRecipientsOfPriceReduction();
                 }
-
-                //Thread.Sleep(5000); // Sleep for 5 seconds -- debugging (to see browser)??
             }
 
             // Ensure flight price is obtained for each flight
             EmailNotifier.NotifyMissingPriceBug();
-
-            // Initiate infinite loop between DailyTimer() & RunFlightChecks()
-            //DailyTimer(config);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
