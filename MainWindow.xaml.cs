@@ -47,23 +47,23 @@ namespace RyanairFlightTrackBot
                 if (string.IsNullOrWhiteSpace(textBox.Text))
                 {
                     // Repopulate the original text
-                    if (textBox == DepartureAirportTextBox)
+                    if (textBox.Name == "DepartureAirportTextBox")
                     {
                         textBox.Text = "Blackpool";
                     }
-                    else if (textBox == DestinationAirportTextBox)
+                    else if (textBox.Name == "DestinationAirportTextBox")
                     {
                         textBox.Text = "Alicante";
                     }
-                    else if (textBox == DateTextBox)
+                    else if (textBox.Name == "DateTextBox")
                     {
                         textBox.Text = "YYYY-MM-DD";
                     }
-                    else if (textBox == FlightNumberTextBox)
+                    else if (textBox.Name == "FlightNumberTextBox")
                     {
                         textBox.Text = "FR 1234";
                     }
-                    else if (textBox == NotifyEmailsTextBox)
+                    else if (textBox.Name == "NotifyEmailsTextBox")
                     {
                         textBox.Text = "name1@domain.com, ...";
                     }

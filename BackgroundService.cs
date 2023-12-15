@@ -2,11 +2,15 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using System.Collections.Generic;
+
 
 namespace RyanairFlightTrackBot
 {
     internal class BackgroundService : Microsoft.Extensions.Hosting.BackgroundService
     {
+        static readonly string operatingSystem = "Windows"; // Use "MAC" for Mac
+
         internal static void RunFlightChecks()
         {
             // Initialise the logger on each entry of the background checks -- need to initialise a logger when adding a new flight too!

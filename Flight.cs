@@ -19,7 +19,7 @@ namespace RyanairFlightTrackBot
     internal class Flight
     {
         //private ILogger logger = Log.ForContext<Flight>();
-        private static readonly Logger logger = LoggerManager.GetLogger();
+        //internal static readonly Logger logger = LoggerManager.GetLogger();
 
         public static int NoOfObjects { get; private set; } = 0;
         public static int NoOfObjectCreationAttempts { get; private set; } = 0;
@@ -93,7 +93,7 @@ namespace RyanairFlightTrackBot
             catch (Exception e)
             {
                 // invalid date format - delete object instance
-                logger.Error(e.Message);                                    // note, removed 'this.' from logger
+                LoggerManager.logger.Error(e.Message);                                    // note, removed 'this.' from logger
                 Console.WriteLine(e.Message);
                 // del self (not applicable in C#)
                 isValid = false;
@@ -181,7 +181,7 @@ namespace RyanairFlightTrackBot
             {
                 // Handle the case when the regex doesn't match
                 Console.WriteLine("Price format not recognized");
-                logger.Warn($"Flight {flightNumber} flightPriceStr not in correct format.");
+                LoggerManager.logger.Warn($"Flight {flightNumber} flightPriceStr not in correct format.");
             }
         }
 

@@ -10,7 +10,7 @@ namespace RyanairFlightTrackBot
     internal class DatabaseHandler
     {
         //private ILogger logger = Log.ForContext<Flight>();
-        private static readonly Logger logger = LoggerManager.GetLogger();
+        //private static readonly Logger logger = LoggerManager.GetLogger();
 
         private readonly Flight flight;
         private readonly string tableName;
@@ -41,7 +41,7 @@ namespace RyanairFlightTrackBot
                         // Table does not exist, create it
                         command.CommandText = $"CREATE TABLE [{tableName}] " +
                             $"(Currency TEXT, FlightPrice NUMERIC, CurrentDateTime DATETIME NOT NULL UNIQUE, SeatAvailability INTEGER, " +
-                            $"FlightID TEXT PRIMARY KEY NOT NULL, OriginAirport TEXT NOT NULL, DestinationAirport TEXT NOT NULL, FlightDate DATETIME NOT NULL, FlightTime TEXT)"; 
+                            $"FlightID TEXT PRIMARY KEY, OriginAirport TEXT NOT NULL, DestinationAirport TEXT NOT NULL, FlightDate DATETIME NOT NULL, FlightTime TEXT)"; 
                         command.ExecuteNonQuery();
                         _tableCreated = true;
 
@@ -66,7 +66,7 @@ namespace RyanairFlightTrackBot
                         catch (Exception ex)
                         {
                             // Handle the exception (e.g., log it, throw a custom exception, etc.)
-                            logger.Warn( $"Failed to append Database record for flight {flight.flightNumber} (in CreateFlightTable()). EXCEPTION: {ex}");
+                            LoggerManager.logger.Warn( $"Failed to append Database record for flight {flight.flightNumber} (in CreateFlightTable()). EXCEPTION: {ex}");
                             Console.WriteLine($"Exception: {ex}");
                         }
                     }
@@ -83,7 +83,7 @@ namespace RyanairFlightTrackBot
             // Handle exception where table was created just now, CreateFlightTable() will add the initial values from today
             if (_tableCreated)
             {
-                logger.Info($"Flight {tableName} has just been created today, therefore not data for yesterdays/previous price.");
+                LoggerManager.logger.Info($"Flight {tableName} has just been created today, therefore not data for yesterdays/previous price.");
                 return;
             }
             try
@@ -111,7 +111,7 @@ namespace RyanairFlightTrackBot
             }
             catch (Exception ex)
             {
-                logger.Warn($"Flight {flight.flightNumber}, Exception: {ex}.\n " +
+                LoggerManager.logger.Warn($"Flight {flight.flightNumber}, Exception: {ex}.\n " +
                     $"Could not access SQL Database to obtain prevoiusPrice");
             }
 
@@ -143,7 +143,7 @@ namespace RyanairFlightTrackBot
                     catch (Exception ex)
                     {
                         // Handle the exception (e.g., log it, throw a custom exception, etc.)
-                        logger.Warn($"Failed to append Database record for flight {flight.flightNumber}. EXCEPTION: {ex}");
+                        LoggerManager.logger.Warn($"Failed to append Database record for flight {flight.flightNumber}. EXCEPTION: {ex}");
                         Console.WriteLine($"Exception: {ex}");
                     }
                 }

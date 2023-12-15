@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Threading.Tasks;
 
 namespace RyanairFlightTrackBot
 {
     internal static class FlightTrackerApp
     {
 
-        static readonly string operatingSystem = "Windows"; // Use "MAC" for Mac
         //private Timer dailyTimer;
 
         //private void DailyTimer(AppConfig config)
@@ -25,9 +25,10 @@ namespace RyanairFlightTrackBot
 
         static void Main(string[] args)
         {
-            using IHost host = CreateHostBuilder(args).Build();
+            IHost host = CreateHostBuilder(args).Build();
             // Start the host and background service on a separate thread
             Task.Run(() => host.Run());
+            host.WaitForShutdown();
             // Call my GUI
             App app = new App();
             app.Run(new MainWindow());
