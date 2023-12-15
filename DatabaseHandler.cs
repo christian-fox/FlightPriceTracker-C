@@ -1,9 +1,8 @@
-﻿using CsvHelper.Configuration.Attributes;
 //using Serilog;
 using System;
-using System.Data;
+using System.Collections.Generic;
 using System.Data.SQLite;
-using NLog;
+using System.Linq;
 
 namespace RyanairFlightTrackBot
 {
@@ -14,6 +13,7 @@ namespace RyanairFlightTrackBot
 
         private readonly Flight flight;
         private readonly string tableName;
+        private static readonly string _connectionString = @"Data Source=C:/Users/chris/source/repos/RyanairFlightTrackBot/FlightBotDataBase.db;";
         private bool _tableCreated = false; // note the _ prefix indicates a class-level field/attrib. This is GOOD PRACTICE!
 
         internal DatabaseHandler(Flight flight)
@@ -23,8 +23,79 @@ namespace RyanairFlightTrackBot
             Console.WriteLine(tableName);
         }
 
+        internal static void CreateFlightList()
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
 
-        private readonly string _connectionString = @"Data Source=C:/Users/chris/source/repos/RyanairFlightTrackBot/FlightBotDataBase.db;";
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    // Retrieve the names of all tables in the database
+                    command.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
+
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string tableName = reader["name"].ToString();
+
+                            // Assuming your tables have names like "FR_XXXX" where XXXX is the flight number
+                            if (tableName.StartsWith("FR_"))
+                            {
+                                Flight flight = CreateFlightFromTable(tableName);
+                                if (flight != null)
+                                {
+                                    // Populate flightList with Flight objects
+                                    Flight.flightList.Add(CreateFlightFromTable(tableName));
+                                }
+                                else
+                                {
+                                    //throw new Exception(string.Format("Invalid Flight Table"));
+                                    LoggerManager.logger.Error("Invalid Flight Table for: ", tableName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        internal static Flight CreateFlightFromTable(string tableName)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    // Retrieve relevant properties/attributes from the table
+                    command.CommandText = $"SELECT originAirport, destinationAirport, sFlightDate, flightNumber FROM {tableName} LIMIT 1";
+
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            // Extract values from the database
+                            string originAirport = reader["originAirport"].ToString();
+                            string destinationAirport = reader["destinationAirport"].ToString();
+                            string sFlightDate = reader["sFlightDate"].ToString();
+                            string flightNumber = reader["flightNumber"].ToString();
+
+                            // Extract the recipientList value from the database and split it into a List<string> ------------- assuming recipientList is stored as a comma separated string in the database tables ----------
+                            List<string> recipientList = reader["recipientList"].ToString().Split(',').ToList();
+
+                            // Return a new Flight object
+                            return new Flight(originAirport, destinationAirport, sFlightDate, flightNumber, recipientList);
+                        }
+                    }
+                }
+            }
+
+            // Return null or handle the case where no data is found
+            return null;
+        }
+
         public void CreateFlightTable()
         {
             using (SQLiteConnection connection = new SQLiteConnection(_connectionString))

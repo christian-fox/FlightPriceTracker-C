@@ -85,9 +85,10 @@ namespace RyanairFlightTrackBot
             // Create an instance of the Flight class
             Flight newFlight = new Flight(departureAirport, destinationAirport, date, flightNumber, emailList);
 
-            // Now, you can use the 'newFlight' object as needed
-            // For example, you might want to perform further actions or store it in your application
-            // ...
+            FlightTrackerApp.RunNewFlightCheck(newFlight);
+            // ---------------------------------------------------------------------------------------------------
+            // Create a loading/progress bar at bottom & display error msg for invalid flight details ("Flight not found").
+            // ---------------------------------------------------------------------------------------------------
 
             // For now, let's display a message box with the flight details
             MessageBox.Show($"New Flight Created:\n{newFlight}", "Flight Tracking");
