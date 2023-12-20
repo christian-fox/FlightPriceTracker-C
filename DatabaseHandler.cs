@@ -1,19 +1,19 @@
-﻿using CsvHelper.Configuration.Attributes;
 //using Serilog;
 using System;
-using System.Data;
+using System.Collections.Generic;
 using System.Data.SQLite;
-using NLog;
+using System.Linq;
 
 namespace RyanairFlightTrackBot
 {
     internal class DatabaseHandler
     {
         //private ILogger logger = Log.ForContext<Flight>();
-        private static readonly Logger logger = LoggerManager.GetLogger();
+        //private static readonly Logger logger = LoggerManager.GetLogger();
 
         private readonly Flight flight;
         private readonly string tableName;
+        private static readonly string _connectionString = @"Data Source=C:/Users/chris/source/repos/RyanairFlightTrackBot/FlightBotDataBase.db;";
         private bool _tableCreated = false; // note the _ prefix indicates a class-level field/attrib. This is GOOD PRACTICE!
 
         internal DatabaseHandler(Flight flight)
@@ -23,8 +23,79 @@ namespace RyanairFlightTrackBot
             Console.WriteLine(tableName);
         }
 
+        internal static void CreateFlightList()
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
 
-        private readonly string _connectionString = @"Data Source=C:/Users/chris/source/repos/RyanairFlightTrackBot/FlightBotDataBase.db;";
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    // Retrieve the names of all tables in the database
+                    command.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
+
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string tableName = reader["name"].ToString();
+
+                            // Assuming your tables have names like "FR_XXXX" where XXXX is the flight number
+                            if (tableName.StartsWith("FR_"))
+                            {
+                                Flight flight = CreateFlightFromTable(tableName);
+                                if (flight != null)
+                                {
+                                    // Populate flightList with Flight objects
+                                    Flight.flightList.Add(CreateFlightFromTable(tableName));
+                                }
+                                else
+                                {
+                                    //throw new Exception(string.Format("Invalid Flight Table"));
+                                    LoggerManager.logger.Error("Invalid Flight Table for: ", tableName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        internal static Flight CreateFlightFromTable(string tableName)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    // Retrieve relevant properties/attributes from the table
+                    command.CommandText = $"SELECT originAirport, destinationAirport, sFlightDate, flightNumber FROM {tableName} LIMIT 1";
+
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            // Extract values from the database
+                            string originAirport = reader["originAirport"].ToString();
+                            string destinationAirport = reader["destinationAirport"].ToString();
+                            string sFlightDate = reader["sFlightDate"].ToString();
+                            string flightNumber = reader["flightNumber"].ToString();
+
+                            // Extract the recipientList value from the database and split it into a List<string> ------------- assuming recipientList is stored as a comma separated string in the database tables ----------
+                            List<string> recipientList = reader["recipientList"].ToString().Split(',').ToList();
+
+                            // Return a new Flight object
+                            return new Flight(originAirport, destinationAirport, sFlightDate, flightNumber, recipientList);
+                        }
+                    }
+                }
+            }
+
+            // Return null or handle the case where no data is found
+            return null;
+        }
+
         public void CreateFlightTable()
         {
             using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
@@ -38,16 +109,19 @@ namespace RyanairFlightTrackBot
 
                     if (command.ExecuteScalar() == null)
                     {
-                        // Table does not exist, create it
+                        // Table does not exist, create it --- handle errors where currency/flightID is over specified limits (VARCHAR(10))
                         command.CommandText = $"CREATE TABLE [{tableName}] " +
-                            $"(Currency TEXT, FlightPrice NUMERIC, CurrentDateTime DATETIME NOT NULL UNIQUE, SeatAvailability INTEGER, " +
-                            $"FlightID TEXT PRIMARY KEY NOT NULL, OriginAirport TEXT NOT NULL, DestinationAirport TEXT NOT NULL, FlightDate DATETIME NOT NULL, FlightTime TEXT)"; 
+                            $"(Currency VARCHAR(20), FlightPrice NUMERIC, CurrentDateTime DATETIME NOT NULL UNIQUE, SeatAvailability INTEGER, " +
+                            $"FlightID VARCHAR(7) PRIMARY KEY, OriginAirport TEXT NOT NULL, DestinationAirport TEXT NOT NULL, FlightDate DATETIME NOT NULL, FlightTime TEXT, emailList TEXT NULL)"; 
                         command.ExecuteNonQuery();
                         _tableCreated = true;
 
+                        // convert flight.emailList type to string
+                        string emailListStr = emailList != null ? string.Join(",", emailList) : null;
+                        
                         // Insert data into the newly created table
-                        command.CommandText = $"INSERT INTO [{tableName}] (Currency, FlightPrice, CurrentDateTime, SeatAvailability, FlightID, OriginAirport, DestinationAirport, FlightDate, FlightTime) " +
-                                              $"VALUES (@Currency, @FlightPrice, @CurrentDateTime, @SeatAvailability, @FlightID, @OriginAirport, @DestinationAirport, @FlightDate, @FlightTime)";
+                        command.CommandText = $"INSERT INTO [{tableName}] (Currency, FlightPrice, CurrentDateTime, SeatAvailability, FlightID, OriginAirport, DestinationAirport, FlightDate, FlightTime, emailList) " +
+                                              $"VALUES (@Currency, @FlightPrice, @CurrentDateTime, @SeatAvailability, @FlightID, @OriginAirport, @DestinationAirport, @FlightDate, @FlightTime, @emailList)";
 
                         command.Parameters.AddWithValue("@Currency", flight.currency);
                         command.Parameters.AddWithValue("@FlightPrice", flight.flightPrice);
@@ -59,6 +133,9 @@ namespace RyanairFlightTrackBot
                         command.Parameters.AddWithValue("@FlightDate", flight.flightDate);
                         command.Parameters.AddWithValue("@FlightTime", flight.sFlightTime);
 
+                        // If emailListStr is null, use DBNull.Value as the parameter value
+                        command.Parameters.AddWithValue("@emailList", emailListStr != null ? (object)emailListStr : DBNull.Value);
+                        
                         try
                         {
                             command.ExecuteNonQuery();
@@ -66,7 +143,7 @@ namespace RyanairFlightTrackBot
                         catch (Exception ex)
                         {
                             // Handle the exception (e.g., log it, throw a custom exception, etc.)
-                            logger.Warn( $"Failed to append Database record for flight {flight.flightNumber} (in CreateFlightTable()). EXCEPTION: {ex}");
+                            LoggerManager.logger.Warn( $"Failed to append Database record for flight {flight.flightNumber} (in CreateFlightTable()). EXCEPTION: {ex}");
                             Console.WriteLine($"Exception: {ex}");
                         }
                     }
@@ -83,7 +160,7 @@ namespace RyanairFlightTrackBot
             // Handle exception where table was created just now, CreateFlightTable() will add the initial values from today
             if (_tableCreated)
             {
-                logger.Info($"Flight {tableName} has just been created today, therefore not data for yesterdays/previous price.");
+                LoggerManager.logger.Info($"Flight {tableName} has just been created today, therefore not data for yesterdays/previous price.");
                 return;
             }
             try
@@ -111,7 +188,7 @@ namespace RyanairFlightTrackBot
             }
             catch (Exception ex)
             {
-                logger.Warn($"Flight {flight.flightNumber}, Exception: {ex}.\n " +
+                LoggerManager.logger.Warn($"Flight {flight.flightNumber}, Exception: {ex}.\n " +
                     $"Could not access SQL Database to obtain prevoiusPrice");
             }
 
@@ -143,7 +220,7 @@ namespace RyanairFlightTrackBot
                     catch (Exception ex)
                     {
                         // Handle the exception (e.g., log it, throw a custom exception, etc.)
-                        logger.Warn($"Failed to append Database record for flight {flight.flightNumber}. EXCEPTION: {ex}");
+                        LoggerManager.logger.Warn($"Failed to append Database record for flight {flight.flightNumber}. EXCEPTION: {ex}");
                         Console.WriteLine($"Exception: {ex}");
                     }
                 }

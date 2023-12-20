@@ -9,10 +9,10 @@ namespace RyanairFlightTrackBot
 
     public static class LoggerManager
     {
-        private static readonly object lockObject = new object();
-        private static Logger logger;
+        internal static readonly object lockObject = new object();
+        internal static Logger logger;
 
-        public static void InitialiseLogger()
+        internal static void InitialiseLogger()
         {
             lock (lockObject)
             {

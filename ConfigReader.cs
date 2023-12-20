@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace RyanairFlightTrackBot
 {
@@ -15,7 +15,6 @@ namespace RyanairFlightTrackBot
         internal static AppConfig ReadConfig()
         {
             AppConfig config = new AppConfig();
-
             try
             {
                 // Read environment variables
@@ -31,11 +30,20 @@ namespace RyanairFlightTrackBot
                 Console.WriteLine($"Error reading environment variables: {ex.Message}");
                 // Handle the error as needed
                 //
-                // End programme ? Environment.Exit(0);  ???
+                // End program ? Environment.Exit(0);  ???
                 //
+                // Set SCHEDULED_TIME env var to tomorrow at 8am?
 
             }
-
             return config;
         }
+
+        internal static void UpdateNextScheduledTime(AppConfig config)
+        {
+            // Update the corresponding environment variable
+            Environment.SetEnvironmentVariable("SCHEDULED_TIME", config.NextScheduledTime.AddDays(1).ToString());
+            config.NextScheduledTime = config.NextScheduledTime.AddDays(1);
+        }
+
     }
+}
