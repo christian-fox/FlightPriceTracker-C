@@ -11,11 +11,9 @@ namespace RyanairFlightTrackBot
     internal static class FlightTrackerApp
     {
         static readonly string operatingSystem = "Windows"; // Use "MAC" for Mac
-        //private Timer dailyTimer;
         internal static void RunNewFlightCheck(Flight flight)
         {
             // Initialise the logger on each entry of the background checks -- need to initialise a logger when adding a new flight too!
-            LoggerManager.InitialiseLogger();
             LoggerManager.InitialiseLogger();
 
             // Create new instance of webScraper object that corresponds to the specific flight
