@@ -72,7 +72,9 @@ namespace RyanairFlightTrackBot
                 textBox.LostFocus -= TextBoxLostFocusHandler;
             }
         }
-
+        /// <summary>
+        /// Need to include some error handling here. For example: spaces/commas in emailList, flightID starting with FR or RK, date in correct format, valid airports...
+        /// </summary>
         private void TrackButton_Click(object sender, RoutedEventArgs e)
         {
             // Retrieve values from text boxes
