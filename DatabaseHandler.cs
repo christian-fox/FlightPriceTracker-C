@@ -109,16 +109,19 @@ namespace RyanairFlightTrackBot
 
                     if (command.ExecuteScalar() == null)
                     {
-                        // Table does not exist, create it
+                        // Table does not exist, create it --- handle errors where currency/flightID is over specified limits (VARCHAR(10))
                         command.CommandText = $"CREATE TABLE [{tableName}] " +
-                            $"(Currency TEXT, FlightPrice NUMERIC, CurrentDateTime DATETIME NOT NULL UNIQUE, SeatAvailability INTEGER, " +
-                            $"FlightID TEXT PRIMARY KEY, OriginAirport TEXT NOT NULL, DestinationAirport TEXT NOT NULL, FlightDate DATETIME NOT NULL, FlightTime TEXT)"; 
+                            $"(Currency VARCHAR(20), FlightPrice NUMERIC, CurrentDateTime DATETIME NOT NULL UNIQUE, SeatAvailability INTEGER, " +
+                            $"FlightID VARCHAR(7) PRIMARY KEY, OriginAirport TEXT NOT NULL, DestinationAirport TEXT NOT NULL, FlightDate DATETIME NOT NULL, FlightTime TEXT, emailList TEXT NULL)"; 
                         command.ExecuteNonQuery();
                         _tableCreated = true;
 
+                        // convert flight.emailList type to string
+                        string emailListStr = emailList != null ? string.Join(",", emailList) : null;
+                        
                         // Insert data into the newly created table
-                        command.CommandText = $"INSERT INTO [{tableName}] (Currency, FlightPrice, CurrentDateTime, SeatAvailability, FlightID, OriginAirport, DestinationAirport, FlightDate, FlightTime) " +
-                                              $"VALUES (@Currency, @FlightPrice, @CurrentDateTime, @SeatAvailability, @FlightID, @OriginAirport, @DestinationAirport, @FlightDate, @FlightTime)";
+                        command.CommandText = $"INSERT INTO [{tableName}] (Currency, FlightPrice, CurrentDateTime, SeatAvailability, FlightID, OriginAirport, DestinationAirport, FlightDate, FlightTime, emailList) " +
+                                              $"VALUES (@Currency, @FlightPrice, @CurrentDateTime, @SeatAvailability, @FlightID, @OriginAirport, @DestinationAirport, @FlightDate, @FlightTime, @emailList)";
 
                         command.Parameters.AddWithValue("@Currency", flight.currency);
                         command.Parameters.AddWithValue("@FlightPrice", flight.flightPrice);
@@ -130,6 +133,9 @@ namespace RyanairFlightTrackBot
                         command.Parameters.AddWithValue("@FlightDate", flight.flightDate);
                         command.Parameters.AddWithValue("@FlightTime", flight.sFlightTime);
 
+                        // If emailListStr is null, use DBNull.Value as the parameter value
+                        command.Parameters.AddWithValue("@emailList", emailListStr != null ? (object)emailListStr : DBNull.Value);
+                        
                         try
                         {
                             command.ExecuteNonQuery();
