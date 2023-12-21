@@ -32,7 +32,6 @@ What assumptions can i make about the nature of an error?
  - Invalid flight details vs out-dated html web-elements
      - If the search button is clicked successully and the flight-card page loads, then html is OK. In this case, it is not likely that the html will have changed on the flight-card page either. If the flight-cards list/array is found, but the flight number is not found, then invalid flight number.
      - Here, for each flight card, a flight number in the specific ([Letter][Letter][space][4 numbers]) format should be checked. If flight numbers are found, but the given one is not, then invalid flight number.
-           - I can distinguish internally whether the error is occuring due to an invalid departure or destination airport (or invalid html) by when the error occurs.
+         - I can distinguish internally whether the error is occuring due to an invalid departure or destination airport (or invalid html) by when the error occurs.
                - Stimulate each kind of error, for each step (departure, destination, date, ...)
-       - 
         
