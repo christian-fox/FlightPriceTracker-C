@@ -54,7 +54,8 @@ Note, with this architecture, cannot log errors that occur in the initialisation
 
 ----------
 Features:
-1. Handle user-input errors
+1. Handle blatant user-input errors (caught at track-button-press) (incorrect format) (could create a matrix/table of valid flight routes)
+2. Handle inconspicuus user-input errors (correct format but enetered incorrectly) (caught during flight 'validity' check) 
    - Decipher the nature of the exception/error;
       - if flight details incorrect,
          - delete flight object (& table if necessary)
@@ -64,17 +65,17 @@ Features:
          - email Developer/Admin of bug
          - Implement a html element-tree reader/parser that starts from a higher-level html tag/node and trace which tag has changed.
       
-2.  Handle case where flight date is now in the past.
+3.  Handle case where flight date is now in the past.
     - Flight-cards will appear. Flight # will not be found.
        - need to decipher between user-inputted (first/initial check) and this case.
     - write to Database table with this info
     - move table into a different database (or diffeent area of the same database)
     - remove instance of flight object from flightList
     
-3. 
+4. 
 
-4.  
 5.  
+6.  
 
 
 
