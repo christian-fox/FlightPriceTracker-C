@@ -72,10 +72,15 @@ Features:
     - move table into a different database (or diffeent area of the same database)
     - remove instance of flight object from flightList
     
-4. 
+4. Store and read config file info
+   - next check time (eg. tomorrow at 8am)
+   - OS
+   - 
 
-5.  
+5. 
+
 6.  
+7.  
 
 
 
