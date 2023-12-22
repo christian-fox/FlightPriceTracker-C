@@ -229,8 +229,15 @@
     <Compile Include="EmailNotifier.cs" />
     <Compile Include="FileHandler.cs" />
     <Compile Include="FlightTrackerApp.cs" />
+    <Compile Include="LoadingWindow.xaml.cs">
+      <DependentUpon>LoadingWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LoggerManager.cs" />
     <Compile Include="WebScraper.cs" />
+    <Page Include="LoadingWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
