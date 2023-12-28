@@ -30,10 +30,12 @@ namespace RyanairFlightTrackBot
             this.loadingWindow = loadingWindow;
         }
 
-        internal void SimulateCheckpointCompletion()
+        /// <summary>
+        /// Constructor overload without a LoadingWindow parameter
+        /// </summary>
+        internal WebScraper(Flight flight)
         {
-            // Call the HandleCheckpointCompletion method from another class
-            loadingWindow.Dispatcher.Invoke(() => loadingWindow.HandleCheckpointCompletion());
+            this.flight = flight;
         }
 
         /// <summary>
@@ -95,7 +97,7 @@ namespace RyanairFlightTrackBot
         private void NavigateToRyanairHomepage(WebDriver driver)
         {
             driver.Navigate().GoToUrl("https://www.ryanair.com/gb/en");
-            SimulateCheckpointCompletion();
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(0));
         }
 
         /// <summary>
@@ -119,7 +121,7 @@ namespace RyanairFlightTrackBot
             }
             if (agreeButton == null) logger.Error("Cookie window agree button not found.");
             agreeButton.Click();
-            SimulateCheckpointCompletion();
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(1));
         }
 
         /// <summary>
@@ -140,7 +142,7 @@ namespace RyanairFlightTrackBot
             }
             if (oneWayCheckBox == null) logger.Error("One-way Check-box button not found.");
             oneWayCheckBox.Click();
-            SimulateCheckpointCompletion();
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(2));
         }
 
         /// <summary>
@@ -156,7 +158,7 @@ namespace RyanairFlightTrackBot
             else departureSearchBox.SendKeys(Keys.Control + "a");
             departureSearchBox.SendKeys(Keys.Backspace);
             departureSearchBox.SendKeys(flight.originAirport);
-            SimulateCheckpointCompletion();
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(3));
 
             // Populate Destination Searchbox
             IWebElement destinationSearchBox = new WebDriverWait(driver, TimeSpan.FromSeconds(10))
@@ -186,7 +188,7 @@ namespace RyanairFlightTrackBot
                 logger.Error("Destination Airport not found.");
                 throw new Exception("Destination Airport not found.");
             }
-            SimulateCheckpointCompletion();
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(4));
         }
 
         /// <summary>
@@ -223,11 +225,14 @@ namespace RyanairFlightTrackBot
                     else if (flight.flightDate < DateTime.Now.Date)
                     {
                         throw new ArgumentException();
-                        ///////////////////////////////////////////////////////////
-                        /// Remove flight object from flightList /////////////////
-                        /// Move the flight table in the database ///////////////
-                        /// Return from this method & 
-                        ////////////////////////////////////////////////////////
+                        /////////////////////////////////////////////////////////////////////////////////////////
+                        /// This method will only be called via the RunCurrentFlightCheck() method, ////////////
+                        ///  as a new flight check past date will be caught earlier, during        ////////////
+                        ///   the TrackButton_Click() -> TextBoxValidityCheck() methods.          ////////////
+                        /// Remove flight object from flightList ////////////////////////////////////////////
+                        /// Move the flight table in the database //////////////////////////////////////////
+                        /// Return from this method. //////////////////////////////////////////////////////
+                        //////////////////////////////////////////////////////////////////////////////////
                     }
                     else
                     {
@@ -235,13 +240,13 @@ namespace RyanairFlightTrackBot
                     }
                     break;
                 }
-                SimulateCheckpointCompletion();
             }
             // Choose Day (from left-hand calendar)
             IWebElement calendarContainer = new WebDriverWait(driver, TimeSpan.FromSeconds(10))
                 .Until(ExpectedConditions.ElementExists(By.TagName("calendar-body")));
             IWebElement calendarDay = calendarContainer.FindElement(By.CssSelector($"div[data-value='{flight.day}']"));
             calendarDay.Click();
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(5));
         }
 
         /// <summary>
@@ -254,6 +259,7 @@ namespace RyanairFlightTrackBot
                 .Until(ExpectedConditions.ElementToBeClickable(By.ClassName("flight-search-widget__start-search-cta")));
             //searchButton.Click(); // Subscribe popup issue
             driver.ExecuteScript("arguments[0].click()", searchButton);
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(6));
         }
 
         /// <summary>
@@ -290,6 +296,7 @@ namespace RyanairFlightTrackBot
                     break;
                 }
             }
+            loadingWindow.Dispatcher.Invoke(() => loadingWindow.UpdateProgressBar(7));
             return flightPriceObtained;
         }
     }

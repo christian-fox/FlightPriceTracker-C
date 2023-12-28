@@ -42,7 +42,7 @@ namespace RyanairFlightTrackBot
         internal string month = null;
         internal int day = 0;
         internal string fileName;
-        internal static List<Flight> flightList;// = new List<Flight>();
+        internal static List<Flight> flightList = new List<Flight>();
 
         /// <summary>
         /// Flight object constructor

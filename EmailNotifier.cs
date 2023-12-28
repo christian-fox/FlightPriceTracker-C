@@ -36,49 +36,48 @@ namespace RyanairFlightTrackBot
             //List<Flight> flightList = Flight.GetFlightList();     // dont need flightList here anymore.
             bool bNullPrices = Flight.hasNullPrices();
 
+            // If all flight objects have valid flight prices, return
+            if (!bNullPrices) return;
             // If any flight price is null, send an email
-            if (bNullPrices)
+            bool emailSent = false;
+            int emailAttempts = 0;
+            SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587)
             {
-                bool emailSent = false;
-                int emailAttempts = 0;
-                SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587)
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(adminEmail, adminPassword),
+                EnableSsl = true
+            };
+
+            while (emailAttempts < 10)
+            {
+                // Set up email content
+                MailMessage mailMessage = new MailMessage(adminEmail, recipient)
                 {
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(adminEmail, adminPassword),
-                    EnableSsl = true
+                    Subject = "BUG: Ryanair Flight Bot failed to obtain price",
+                    Body = $@"<html>
+                                    <body>
+                                        <p>Dear <span style=""color:darkblue"">{recipient}</span>,</p>
+                                        <p>Issue getting flight prices!</p>
+                                    </body>
+                                </html>",
+                    IsBodyHtml = true
                 };
 
-                while (emailAttempts < 10)
+                try
                 {
-                    // Set up email content
-                    MailMessage mailMessage = new MailMessage(adminEmail, recipient)
-                    {
-                        Subject = "BUG: Ryanair Flight Bot failed to obtain price",
-                        Body = $@"<html>
-                                       <body>
-                                           <p>Dear <span style=""color:darkblue"">{recipient}</span>,</p>
-                                           <p>Issue getting flight prices!</p>
-                                       </body>
-                                   </html>",
-                        IsBodyHtml = true
-                    };
-
-                    try
-                    {
-                        // Send email
-                        smtpClient.Send(mailMessage);
-                        Console.WriteLine($"Email sent successfully to {recipient}");
-                        emailSent = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to send email. Error message: {ex.Message}");
-                        emailAttempts++;
-                    }
+                    // Send email
+                    smtpClient.Send(mailMessage);
+                    Console.WriteLine($"Email sent successfully to {recipient}");
+                    emailSent = true;
+                    break;
                 }
-                if (!emailSent) logger.Error("Bug-email failed to send after 10 tries.");
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to send email. Error message: {ex.Message}");
+                    emailAttempts++;
+                }
             }
+            if (!emailSent) logger.Error("Bug-email failed to send after 10 tries.");
         }
 
 

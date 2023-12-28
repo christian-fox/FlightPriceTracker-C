@@ -1,6 +1,6 @@
 using Microsoft.SqlServer.Server;
 using RyanairFlightTrackBot;
-using Serilog;
+//using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -97,23 +97,11 @@ namespace RyanairFlightTrackBot
             // Create an instance of the Flight class
             Flight newFlight = new Flight(departureAirport, destinationAirport, dateStr, flightNumber, emailList);
 
-            FlightTrackerApp.RunNewFlightCheck(newFlight);
+            FlightTrackerApp.RunNewFlightCheck(newFlight, loadingWindow);
             // ---------------------------------------------------------------------------------------------------
             // Create a loading/progress bar at bottom & display error msg for invalid flight details ("Flight not found").
             // ---------------------------------------------------------------------------------------------------
             //
-
-
-
-            // Simulate completion of checkpoints (replace this with your actual logic)
-            ThreadPool.QueueUserWorkItem(state =>
-            {
-                // Simulate checkpoint 1 completion
-                Thread.Sleep(1000);
-                // Raise an event or call a method to indicate completion of checkpoint 1
-                loadingWindow.Dispatcher.Invoke(() => loadingWindow.HandleCheckpointCompletion());
-            });
-
 
 
             //// For now, let's display a message box with the flight details

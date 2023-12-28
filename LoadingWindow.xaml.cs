@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Threading;
 using System.Collections.Generic;
-using System.Windows.Controls;
+using System.Linq;
 
 namespace RyanairFlightTrackBot
 {
@@ -11,48 +10,38 @@ namespace RyanairFlightTrackBot
     /// </summary>
     public partial class LoadingWindow : Window
     {
-        private int totalCheckpoints = 5;
-        private int completedCheckpoints;
+        private List<bool> checkpointList = Enumerable.Repeat(false, 8).ToList();
 
-
-
-        internal void HandleCheckpointCompletion()
+        /// <summary>
+        /// Updates the loading bar based on the percentage of true values in checkpointList.
+        /// Note, the maximum checkpointNum arg value is checkpointList.Count - 1, as lists are 0-indexed in C#.
+        /// </summary>
+        /// <param name="checkpointNum"></param>
+        internal void UpdateProgressBar(int checkpointNum)
         {
-            // Update the completed checkpoints count
-            completedCheckpoints++;
+            // Update the checkpoint status in the list
+            if (checkpointNum >= 0 && checkpointNum < checkpointList.Count)
+            {
+                checkpointList[checkpointNum] = true;
+            }
 
             // Calculate the progress percentage
-            double progressPercentage = (double)completedCheckpoints / totalCheckpoints * 100;
+            double progressPercentage = (double)checkpointList.Count(b => b) / checkpointList.Count * 100;
 
             // Update the ProgressBar value
             progressBar.Value = progressPercentage;
 
             // Check if all checkpoints are completed
-            if (completedCheckpoints == totalCheckpoints)
+            if (checkpointList.All(b => b))
             {
                 // Optionally close the loading window or perform other actions
                 Close();
             }
         }
 
-        // Additional methods to handle completion of specific checkpoints
-        // For example:
-        // private void HandleEvent1Completion(object sender, EventArgs e)
-        // {
-        //     checkpoints[0] = true;
-        //     HandleCheckpointCompletion();
-        // }
-
-
         internal LoadingWindow()
         {
             InitializeComponent();
-
-            // Subscribe to the events or methods that represent completion of checkpoints
-            // For example:
-            // Event1 += HandleEvent1Completion;
-            // Event2 += HandleEvent2Completion;
-            // ...
 
         }
     }
